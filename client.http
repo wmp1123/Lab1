@@ -15,10 +15,10 @@ POST http://localhost:3000/register
 Content-Type: application/json
 
 {
-    "newusername": "Weee",
-    "newpassword": "0000",
-    "newname": "we",
-    "newemail": "we@gmail.com"
+    "username": "Weee",
+    "password": "0000",
+    "name": "we",
+    "email": "we@gmail.com"
 }
 
 ###

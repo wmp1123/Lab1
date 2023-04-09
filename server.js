@@ -20,46 +20,6 @@ let dbUsers = [
     }
 ]
 
-function login(username, password) {
-    salt = bcrypt.genSaltSync(10);
-    hash = bcrypt.hashSync(password, salt);
-    console.log("someone try to login with", username, hash)
-    let matched = dbUsers.find(element => 
-        element.username == username
-    )
-    if (matched) {
-        if (matched.password == hash) {
-            return matched
-        } else {
-            return "Password not matched" + hash;
-        } 
-    } else {
-        return "User not found"
-    }
-}
-
-function register(newusername, newpassword, newname, newemail) {
-
-    let regmatch = dbUsers.find(element =>
-        element.username == newusername
-        )
-        if (regmatch) {
-            return "Username is used"
-        } else {
-
-        salt = bcrypt.genSaltSync(10);
-        hash = bcrypt.hashSync(newpassword, salt);
-
-        dbUsers.push({
-            username: newusername,
-            password: hash,
-            name: newname,
-            email: newemail,
-        })
-        return hash;
-    }
-}
-
 app.use(express.json());
 
 app.get('/',(req,res) => {
@@ -74,26 +34,37 @@ app.listen(port, () => {
     console.log(`Server listening at http://localhost:${port}`);
 });
 
-app.post('/register', (req, res) => {
-    let data = req.body
-    res.send(
-        register(
-        data.newusername,
-        data.newpassword,
-        data.newname,
-        data.newemail
-        )
+app.post('/register',async (req, res) => {
 
-    );
+    const {username, password, name, email} = req.body
+    const hash = await bcrypt.hash(password, 10)
+    const regmatch = dbUsers.find(element => element.username === username)
+        if (!regmatch) {
+            dbUsers.push({
+            username,
+            password:hash,
+            name,
+            email
+            })
+            res.send("Registration success")
+            return
+        } else {
+            res.send("Username is used")
+        };
+})
+
+app.post('/login',async(req,res) => {
+    const {username, password} = req.body
+    const matched = dbUsers.find(element => element.username === username)
+    if (!matched) {
+        res.send("User not found")
+        return
+    }
+    const hashmatch = await bcrypt.compare(password, matched.password)
+    if (!hashmatch) {
+        res.send("Password not matched")
+        return
+    } else {
+    res.send(matched)
+    }
 });
-
-app.post('/login',(req,res) => {
-    let data = req.body
-    res.send(
-        login(
-            data.username,
-            data.password
-        )
-    );
-});
-
